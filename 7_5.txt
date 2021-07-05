@@ -1,0 +1,87 @@
+7.5
+
+과제. 데이터 수집. until 7.9
+공공데이터도 함 보고.
+
+join 된 것에 item 까지 붙여보기. item 테이블에서 이름으로.
+
+CREATE TABLE test (
+                                    id INTEGER
+                                    PRIMARY KEY AUTOINCREMENT , -- 자동으로 UNIQUE, NOT NULL
+                                    a VARCHAR(255),
+                                    b VARCHAR(255)
+);
+SELECT * FROM sqlite_sequence; --최댓값 알려줌
+
+
+-- 새로운 열을 추가, 삭제하기
+ALTER TABLE test ADD COLUMN c VARCHAR(100);
+PRAGMA table_info(test);
+--열을 바로 삭제할 수 는 없고, 새로운 테이블로 저장
+
+CREATE TABLE test_2 AS SELECT id, a, b FROM test;
+DROP TABLE test;
+ALTER TABLE test_2 RENAME TO test;
+
+CREATE TABLE myTB(
+a BOOLEAN NOT NULL CHECK (a IN(0,1)) --직접 부울린 제약조건 만들기
+);
+SELECT * FROM myTB;
+PRAGMA table_info(myTB);
+DROP TABLE myTB;
+INSERT INTO myTB VALUES(333); -- IN 범위에 없어서 안됨
+
+
+--FOREIGN KEY 를 사용하여 테이블 사이의 관계 설정
+--일종의 제약  으로서 그 역할을 한다
+
+CREATE TABLE Franchisee(
+FranchiseeID INTEGER PRIMARY KEY,
+FranchiseeName TEXT NOT NULL
+);
+
+SELECT * FROM Franchisee;
+
+INSERT INTO Franchisee VALUES (111,'JH'); --피인용 먼저 등록.
+INSERT INTO Franchisee VALUES (222,'BS');
+INSERT INTO Franchisee VALUES (333,'AI');
+
+CREATE TABLE Store(
+StoreID INTEGER PRIMARY KEY,
+StoreName TEXT NOT NULL,
+FranchiseeID INTEGER NOT NULL,
+FOREIGN KEY(FranchiseeID) REFERENCES Franchisee(FranchiseeID)  --인용하기
+);
+DROP TABLE store;
+SELECT * FROM Store ;
+INSERT INTO Store VALUES (1,"711 Gangnam", 111);
+INSERT INTO Store VALUES (2,"711 Munjeong ",111);
+INSERT INTO Store VALUES (3,"711 Suyu ", 222);
+INSERT INTO Store VALUES (4 ,"711 Youido ", 114); --안됨. 없는 FranchiseeID 값이므로.
+
+DROP TABLE Franchisee; -- Foreign Key 가 설정되어있어서 먼저 지울 수 없음. store를 먼저 지운 다음에 가능
+
+--테이블 join , key가 될수 있는 열이 있는 경우에 가능
+SELECT * FROM customer;
+SELECT * FROM item;
+SELECT * FROM sale;
+
+SELECT a.name, b.item_id, b.quantity,b.price  FROM customer AS a INNER JOIN sale AS b ON a.id=b.customer_id ; --LEFT , RIGHT  총 세종류. 일치하는 조건으로 이어붙인다. 결측치x
+SELECT a.name, b.item_id, b.quantity,b.price  FROM customer AS a LEFT JOIN sale AS b ON a.id=b.customer_id ORDER BY price DESC; --왼쪽에서 다 가져옴
+SELECT a.name, b.item_id, b.quantity,b.price  FROM customer AS a RIGHT JOIN sale AS b ON a.id=b.customer_id ORDER BY price DESC; --오른쪽에서 다 가져옴 a,b, 의 역할을 바꾸면 left 와 right 이 같아짐
+SELECT a.name, b.item_id, b.quantity,b.price  FROM customer AS a OUTER JOIN sale AS b ON a.id=b.customer_id ORDER BY price DESC; --왼,오 다 가져옴
+
+DROP TABLE new_join; --넣어진것에 item 에서 또 join 해보기.
+CREATE TABLE new_join AS SELECT customer.name, sale.item_id, sale.quantity, sale.price  FROM customer INNER JOIN sale  ON customer.id=sale.customer_id;
+SELECT * FROM new_join;
+SELECT * FROM item;
+SELECT new_join.name, item.name AS item_name, new_join.quantity, new_join.price  FROM new_join  INNER JOIN item ON new_join.item_id = item.id ORDER BY new_join.name;
+
+출력결과를 view 로 저장.
+CREATE VIEW myView1 AS SELECT Name AS Country, Population / 1000 AS "Pop(1000s)" FROM Country;
+CREATE VIEW myView2 AS SELECT Name, Continent, Population FROM Country WHERE Population < 100000 ORDER BY Population DESC;
+CREATE VIEW myView3 AS SELECT Name, Continent FROM Country WHERE Name LIKE '_a%';
+
+SELECT * FROM myView1;
+SELECT * FROM myView2;
+
